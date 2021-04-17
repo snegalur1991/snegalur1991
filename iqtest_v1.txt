@@ -1,0 +1,50 @@
+FROM centos
+
+RUN groupadd --gid 1000 iqdb
+RUN useradd --uid 1000 --gid iqdb -d /opt/sybase -m sybase --shell /bin/bash
+
+RUN yum makecache
+RUN yum -y update
+RUN yum -y install csh
+RUN yum -y install file
+RUN yum -y install libaio
+RUN yum -y install libnsl
+RUN yum -y install libXext
+RUN yum -y install libXrender
+RUN yum -y install libXtst
+RUN yum -y install libXi
+RUN yum -y install unzip 
+RUN yum -y install glibc
+RUN yum -y install libgcc
+RUN yum -y install libstdc++
+RUN yum -y install ncurses-compat-libs
+RUN yum -y install dos2unix
+
+RUN echo "root:root123" | chpasswd
+
+RUN mkdir -p /opt/sybase/install
+ADD IQSERV161004_0-80002767.TGZ /opt/sybase/install
+
+WORKDIR /opt/sybase/install/ebf28954/
+
+VOLUME /data
+
+COPY installer.properties /opt/sybase/install/ebf28954/
+
+RUN mkdir -p /opt/sybase/iq161
+RUN ./setup.bin -f installer.properties -i silent -DAGREE_TO_SAP_LICENSE=true
+
+RUN chown -R sybase:iqdb /opt/sybase/iq161
+
+RUN echo "source /opt/sybase/iq161/IQ.sh" >> /opt/sybase/.bash_profile
+RUN rm -rf /opt/sybase/install/ebf28954
+
+WORKDIR /opt/sybase/
+
+COPY install_script.sh /opt/sybase/
+RUN chown sybase:iqdb /opt/sybase/install_script.sh
+USER sybase
+RUN cd /opt/sybase/
+RUN dos2unix .bash_profile
+RUN chmod +x install_script.sh
+RUN sh install_script.sh
