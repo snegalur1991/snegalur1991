@@ -48,3 +48,4 @@ RUN cd /opt/sybase/
 RUN dos2unix .bash_profile
 RUN chmod +x install_script.sh
 RUN sh install_script.sh
+yum
